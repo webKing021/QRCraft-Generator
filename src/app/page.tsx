@@ -228,6 +228,25 @@ export default function Home() {
               </span>
             ))}
           </div>
+
+          {/* Developer CTA */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Built by{" "}
+              <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                Krutarth Raychura
+              </span>
+            </span>
+            <a
+              href="https://github.com/webKing021/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 transition-all shadow-lg shadow-gray-900/20 dark:shadow-white/10 hover:shadow-xl hover:scale-105 active:scale-100"
+            >
+              <FiGithub className="text-base" />
+              Follow on GitHub
+            </a>
+          </div>
         </div>
       </header>
 
