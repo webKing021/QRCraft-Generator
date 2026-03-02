@@ -87,6 +87,8 @@ export default function Home() {
   const [urlError, setUrlError] = useState("");
   const [isDriveLink, setIsDriveLink] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
 
   const qrRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -143,37 +145,51 @@ export default function Home() {
   // --- download ---
   const download = useCallback(() => {
     if (!qrDataUrl && !qrSvg) return;
-    const link = document.createElement("a");
+    setDownloadError("");
 
-    if (downloadFormat === "svg") {
-      const blob = new Blob([qrSvg], { type: "image/svg+xml" });
-      link.href = URL.createObjectURL(blob);
-      link.download = "qrcode.svg";
-    } else if (downloadFormat === "jpeg") {
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      const img = new Image();
-      img.onload = () => {
-        ctx?.drawImage(img, 0, 0, size, size);
-        link.href = canvas.toDataURL("image/jpeg", 0.95);
-        link.download = "qrcode.jpg";
-        link.click();
-      };
-      img.src = qrDataUrl!;
-      return;
-    } else {
-      link.href = qrDataUrl!;
-      link.download = "qrcode.png";
+    try {
+      const link = document.createElement("a");
+
+      if (downloadFormat === "svg") {
+        const blob = new Blob([qrSvg], { type: "image/svg+xml" });
+        link.href = URL.createObjectURL(blob);
+        link.download = "qrcode.svg";
+      } else if (downloadFormat === "jpeg") {
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setDownloadError("Failed to create canvas for JPEG conversion.");
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, size, size);
+          link.href = canvas.toDataURL("image/jpeg", 0.95);
+          link.download = "qrcode.jpg";
+          link.click();
+        };
+        img.onerror = () => {
+          setDownloadError("Failed to process image for JPEG download.");
+        };
+        img.src = qrDataUrl!;
+        return;
+      } else {
+        link.href = qrDataUrl!;
+        link.download = "qrcode.png";
+      }
+
+      link.click();
+    } catch {
+      setDownloadError("Download failed. Please try again.");
     }
-
-    link.click();
   }, [qrDataUrl, qrSvg, downloadFormat, size]);
 
   // --- copy image ---
   const copyImage = useCallback(async () => {
     if (!qrDataUrl) return;
+    setCopyError("");
     try {
       const resp = await fetch(qrDataUrl);
       const blob = await resp.blob();
@@ -183,7 +199,8 @@ export default function Home() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* clipboard may not be available */
+      setCopyError("Copy failed — try downloading instead.");
+      setTimeout(() => setCopyError(""), 4000);
     }
   }, [qrDataUrl]);
 
@@ -620,6 +637,18 @@ export default function Home() {
                     )}
                   </button>
                 </div>
+
+                {/* Error messages for download/copy */}
+                {downloadError && (
+                  <p className="text-red-500 text-sm text-center mt-2 flex items-center justify-center gap-1">
+                    <FiInfo className="shrink-0" /> {downloadError}
+                  </p>
+                )}
+                {copyError && (
+                  <p className="text-red-500 text-sm text-center mt-2 flex items-center justify-center gap-1">
+                    <FiInfo className="shrink-0" /> {copyError}
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-500/5 dark:to-emerald-500/5 border border-green-200 dark:border-green-500/20 rounded-xl p-4 text-sm text-green-700 dark:text-green-300 text-center">
